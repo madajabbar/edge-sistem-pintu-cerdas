@@ -77,13 +77,6 @@ class HomeController extends Controller
                 'some error occurred'
             );
         }
-        // Insert the data into the database
-        // foreach ($data as $record) {
-        //     Room::create([
-        //         'name' => $record['name'],
-        //         'email' => $record['email']
-        //     ]);
-        // }
     }
 
     public function store(Request $request)
@@ -107,33 +100,39 @@ class HomeController extends Controller
             ];
             $statusCode = 0;
             $client = new Client();
-            try{
-            $response = $client->post($url, [
-                'form_params' => $data
-            ]);
-            $statusCode = $response->getStatusCode();
-            $check_pending = Log::where('status', 'pending')->get();
-            foreach ($check_pending as $key => $value) {
-                Log::where('id', $value->id)->update([
-                   'status' =>'success'
+            try {
+                $response = $client->post($url, [
+                    'form_params' => $data
                 ]);
-            }
-
-            }
-            catch(Exception $e){
-            $statusCode = 404;
+                $statusCode = $response->getStatusCode();
+                $check_pending = Log::where('status', 'pending')->get();
+                foreach ($check_pending as $key => $value) {
+                    if($value->status == 'pending'){
+                        $client->post($url, [
+                            'access_id' => $value->access_id,
+                            'user_id' => $value->user_id,
+                        ]);
+                        Log::where('id', $value->id)->update([
+                            'status' => 'success'
+                        ]);
+                    }
+                }
+                $data = Log::Create(
+                    [
+                        'access_id' => $arr->id,
+                        'user_id' => $user->id,
+                        'status' => 'success'
+                    ]
+                );
+                return ResponseFormatter::success($data, 'Upload Successfully');
+            } catch (Exception $e) {
+                $statusCode = 404;
+                return ResponseFormatter::error($e->getMessage(), $statusCode);
             }
             // $responseContent = $response->getBody()->getContents();
             // dd();
             // Do whatever you need to do with the response content
 
-            $data = Log::Create(
-                [
-                'access_id' => $arr->id,
-                'user_id' => $user->id,
-                'status' => $statusCode==200? 'success':'pending',
-            ]);
-            return ResponseFormatter::success($data, 'Upload Successfully');
         } catch (Exception $e) {
             return ResponseFormatter::error(
                 [
