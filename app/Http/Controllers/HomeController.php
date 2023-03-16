@@ -98,6 +98,7 @@ class HomeController extends Controller
                 'access_id' => $arr->id,
                 'user_id' => $user->id,
             ];
+            dd($data);
             $statusCode = 0;
             $client = new Client();
             try {
@@ -107,15 +108,9 @@ class HomeController extends Controller
                 $statusCode = $response->getStatusCode();
                 $check_pending = Log::where('status', 'pending')->get();
                 foreach ($check_pending as $key => $value) {
-                    if($value->status == 'pending'){
-                        $client->post($url, [
-                            'access_id' => $value->access_id,
-                            'user_id' => $value->user_id,
-                        ]);
-                        Log::where('id', $value->id)->update([
-                            'status' => 'success'
-                        ]);
-                    }
+                    Log::where('id', $value->id)->update([
+                        'status' => 'success'
+                    ]);
                 }
                 $data = Log::Create(
                     [
