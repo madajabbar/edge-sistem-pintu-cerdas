@@ -98,13 +98,14 @@ class HomeController extends Controller
                 'access_id' => $arr->id,
                 'user_id' => $user->id,
             ];
-            dd($data);
+            // dd($data);
             $statusCode = 0;
             $client = new Client();
             try {
                 $response = $client->post($url, [
                     'form_params' => $data
                 ]);
+                dd($response);
                 $statusCode = $response->getStatusCode();
                 $check_pending = Log::where('status', 'pending')->get();
                 foreach ($check_pending as $key => $value) {
