@@ -93,7 +93,7 @@ class HomeController extends Controller
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
 
-            $url = 'http://pintucerdas.my.id/api/get';
+            $url = 'http://pintucerdas.my.i/api/get';
             $data = [
                 'access_id' => $arr->id,
                 'user_id' => $user->id,
@@ -130,8 +130,15 @@ class HomeController extends Controller
                 }
                 return ResponseFormatter::success($data, 'Upload Successfully');
             } catch (Exception $e) {
-                $statusCode = 404;
-                return ResponseFormatter::error($e->getMessage(), $statusCode);
+                $data = Log::Create(
+                    [
+                        'access_id' => $arr->id,
+                        'user_id' => $user->id,
+                        'status' => 'pending'
+                    ]
+                );
+                return ResponseFormatter::success($data, 'Upload Successfully but cloud server has trouble');
+
             }
             // $responseContent = $response->getBody()->getContents();
             // dd();
