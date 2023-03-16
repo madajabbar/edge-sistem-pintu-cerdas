@@ -93,7 +93,7 @@ class HomeController extends Controller
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
 
-            $url = 'http://pintucerdas.my.i/api/get';
+            $url = 'http://pintucerdas.my.id/api/get';
             $data = [
                 'access_id' => $arr->id,
                 'user_id' => $user->id,
