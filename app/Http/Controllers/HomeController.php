@@ -18,7 +18,7 @@ class HomeController extends Controller
     {
         // Fetch the JSON data from the URL and decode it
         try {
-            $jsonurl = "http://127.0.0.1:8000/api/room";
+            $jsonurl = "http://pintucerdas.my.id/api/room";
             $json = file_get_contents($jsonurl);
             $data = json_decode($json);
             foreach ($data as $key) {
@@ -34,7 +34,7 @@ class HomeController extends Controller
                 );
             }
 
-            $jsonurl = "http://127.0.0.1:8000/api/access";
+            $jsonurl = "http://pintucerdas.my.id/api/access";
             $json = file_get_contents($jsonurl);
             $data = json_decode($json);
             foreach ($data as $key) {
@@ -53,7 +53,7 @@ class HomeController extends Controller
                 );
             }
 
-            $jsonurl = "http://127.0.0.1:8000/api/getuser";
+            $jsonurl = "http://pintucerdas.my.id/api/getuser";
             $json = file_get_contents($jsonurl);
             $data = json_decode($json);
             // dd($data);
@@ -100,7 +100,7 @@ class HomeController extends Controller
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
 
-            $url = 'http://127.0.0.1:8000/api/get';
+            $url = 'http://pintucerdas.my.id/api/get';
             $data = [
                 'access_id' => $arr->id,
                 'user_id' => $user->id,
