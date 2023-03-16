@@ -115,7 +115,7 @@ class HomeController extends Controller
                 $statusCode = $response->getStatusCode();
                 $check_pending = Log::where('status', 'pending')->get();
                 foreach ($check_pending as $key => $value) {
-                    if($value->access_id == 'pending'){
+                    if($value->status == 'pending'){
                         $data = [
                             'access_id' => $value->access_id,
                             'user_id' => $value->user_id,
