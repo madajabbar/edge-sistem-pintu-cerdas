@@ -115,7 +115,6 @@ class HomeController extends Controller
                 $statusCode = $response->getStatusCode();
                 $check_pending = Log::where('status', 'pending')->get();
                 foreach ($check_pending as $key => $value) {
-                    if($value->status == 'pending'){
                         $data = [
                             'access_id' => $value->access_id,
                             'user_id' => $value->user_id,
@@ -126,7 +125,6 @@ class HomeController extends Controller
                         Log::where('id', $value->id)->update([
                             'status' => 'success'
                         ]);
-                    }
                 }
                 return ResponseFormatter::success($data, 'Upload Successfully');
             } catch (Exception $e) {
@@ -137,7 +135,7 @@ class HomeController extends Controller
                         'status' => 'pending'
                     ]
                 );
-                return ResponseFormatter::success($data, 'Upload Successfully but cloud server has trouble');
+                return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
 
             }
             // $responseContent = $response->getBody()->getContents();
