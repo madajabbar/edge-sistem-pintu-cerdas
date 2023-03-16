@@ -105,14 +105,6 @@ class HomeController extends Controller
                 $response = $client->post($url, [
                     'form_params' => $data
                 ]);
-                dd($response);
-                $statusCode = $response->getStatusCode();
-                $check_pending = Log::where('status', 'pending')->get();
-                foreach ($check_pending as $key => $value) {
-                    Log::where('id', $value->id)->update([
-                        'status' => 'success'
-                    ]);
-                }
                 $data = Log::Create(
                     [
                         'access_id' => $arr->id,
@@ -120,6 +112,22 @@ class HomeController extends Controller
                         'status' => 'success'
                     ]
                 );
+                $statusCode = $response->getStatusCode();
+                $check_pending = Log::where('status', 'pending')->get();
+                foreach ($check_pending as $key => $value) {
+                    if($value->access_id == 'pending'){
+                        $data = [
+                            'access_id' => $value->access_id,
+                            'user_id' => $value->user_id,
+                        ];
+                        $client->post($url, [
+                            'form_params' => $data
+                        ]);
+                        Log::where('id', $value->id)->update([
+                            'status' => 'success'
+                        ]);
+                    }
+                }
                 return ResponseFormatter::success($data, 'Upload Successfully');
             } catch (Exception $e) {
                 $statusCode = 404;
