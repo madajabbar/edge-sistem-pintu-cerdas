@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
 class HomeController extends Controller
 {
@@ -18,6 +19,7 @@ class HomeController extends Controller
     {
         // Fetch the JSON data from the URL and decode it
         try {
+            Artisan::call('migrate:fresh');
             $jsonurl = "http://pintucerdas.my.id/api/room";
             $json = file_get_contents($jsonurl);
             $data = json_decode($json);
@@ -44,6 +46,7 @@ class HomeController extends Controller
                     ],
                     [
                         'name' => $key->name,
+                        'day' => $key->day,
                         'start_at' => $key->start_at,
                         'end_at' => $key->end_at,
                         'unique_key' => $key->unique_key,
@@ -56,7 +59,6 @@ class HomeController extends Controller
             $jsonurl = "http://pintucerdas.my.id/api/getuser";
             $json = file_get_contents($jsonurl);
             $data = json_decode($json);
-            // dd($data);
             foreach ($data as $key) {
                 User::updateOrCreate(
                     [
@@ -86,35 +88,35 @@ class HomeController extends Controller
             $str = $request->link;
             $expld = explode('-', $str);
             $user = User::where('name', $expld[0])->first();
-            // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
+            // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
             $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
             // dd($arr);
             if (is_null($arr)) {
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
-
-            $url = 'http://pintucerdas.my.id/api/get';
-            $data = [
-                'access_id' => $arr->id,
-                'user_id' => $user->id,
-            ];
-            // dd($data);
-            $statusCode = 0;
-            $client = new Client();
-            try {
-                $response = $client->post($url, [
-                    'form_params' => $data
-                ]);
-                $data = Log::Create(
-                    [
-                        'access_id' => $arr->id,
-                        'user_id' => $user->id,
-                        'status' => 'success'
-                    ]
-                );
-                $statusCode = $response->getStatusCode();
-                $check_pending = Log::where('status', 'pending')->get();
-                foreach ($check_pending as $key => $value) {
+            if ($arr->day == Carbon::now()->format('l') && (Carbon::now()->format('H:i:s') >= $arr->start_at && Carbon::now()->format('H:i:s') <= $arr->end_at)) {
+                $url = 'http://pintucerdas.my.id/api/get';
+                $data = [
+                    'access_id' => $arr->id,
+                    'user_id' => $user->id,
+                ];
+                // dd($data);
+                $statusCode = 0;
+                $client = new Client();
+                try {
+                    $response = $client->post($url, [
+                        'form_params' => $data
+                    ]);
+                    $data = Log::Create(
+                        [
+                            'access_id' => $arr->id,
+                            'user_id' => $user->id,
+                            'status' => 'success'
+                        ]
+                    );
+                    $statusCode = $response->getStatusCode();
+                    $check_pending = Log::where('status', 'pending')->get();
+                    foreach ($check_pending as $key => $value) {
                         $data = [
                             'access_id' => $value->access_id,
                             'user_id' => $value->user_id,
@@ -125,23 +127,27 @@ class HomeController extends Controller
                         Log::where('id', $value->id)->update([
                             'status' => 'success'
                         ]);
+                    }
+                    return ResponseFormatter::success($data, 'Upload Successfully');
+                } catch (Exception $e) {
+                    $data = Log::Create(
+                        [
+                            'access_id' => $arr->id,
+                            'user_id' => $user->id,
+                            'status' => 'pending'
+                        ]
+                    );
+                    return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
                 }
-                return ResponseFormatter::success($data, 'Upload Successfully');
-            } catch (Exception $e) {
-                $data = Log::Create(
-                    [
-                        'access_id' => $arr->id,
-                        'user_id' => $user->id,
-                        'status' => 'pending'
-                    ]
-                );
-                return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
-
+                // $responseContent = $response->getBody()->getContents();
+                // dd();
+                // Do whatever you need to do with the response content
             }
-            // $responseContent = $response->getBody()->getContents();
-            // dd();
-            // Do whatever you need to do with the response content
-
+            else{
+                return ResponseFormatter::error(
+                    'Invalid QR', 'You has no access in this room yet'
+                );
+            }
         } catch (Exception $e) {
             return ResponseFormatter::error(
                 [
