@@ -86,11 +86,11 @@ class HomeController extends Controller
         try {
             $ruangan_id = $request->room_id;
             $str = $request->link;
-            if(str_contains('admin',$str)){
-                return ResponseFormatter::success(null,'Admin Open The Door');
-            }
             $expld = explode('-', $str);
             $user = User::where('name', $expld[0])->first();
+            if($user->role_id == 1){
+                return ResponseFormatter::success(null, 'Admin open the door');
+            }
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
             $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
             // dd($arr);
