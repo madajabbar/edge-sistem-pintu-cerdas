@@ -88,13 +88,18 @@ class HomeController extends Controller
             $str = $request->link;
             $expld = explode('-', $str);
             $user = User::where('name', $expld[0])->first();
-            if($user->role_id == 1){
+            if($user ? $user->name == 'admin' : false){
                 return ResponseFormatter::success(null, 'Admin open the door');
+            }
+            if($user == null){
+                return ResponseFormatter::error(null,'User Not Found');
             }
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
             $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
             // dd($arr);
-
+            if (is_null($arr)) {
+                return ResponseFormatter::error(null, 'Invalid QR');
+            }
             if ($arr->day == Carbon::now()->format('l') && (Carbon::now()->format('H:i:s') >= $arr->start_at && Carbon::now()->format('H:i:s') <= $arr->end_at)) {
                 $url = 'http://pintucerdas.my.id/api/get';
                 $data = [
