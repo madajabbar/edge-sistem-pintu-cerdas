@@ -164,13 +164,13 @@ class HomeController extends Controller
                         'form_params' => $data
                     ]);
                     $check_log = Log::orderBy('id','DESC')->first();
-                    dd($check_log);
                     if($check_log == null){
                         $id = 1;
                     }
                     else{
                         $id = $check_log->id + 1;
                     }
+                    dd($id);
                     $data = Log::Create(
                         [
                             'id' => $id,
