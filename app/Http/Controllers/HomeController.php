@@ -170,7 +170,6 @@ class HomeController extends Controller
                     else{
                         $id = $check_log->id + 1;
                     }
-                    dd($id);
                     $data = Log::Create(
                         [
                             'id' => $id,
