@@ -29,6 +29,7 @@ class HomeController extends Controller
                         'id' => $key->id
                     ],
                     [
+                        'id' => $key->id,
                         'name' => $key->name,
                         'slug' => $key->slug,
                         'ip_address' => $key->ip_address,
@@ -45,6 +46,7 @@ class HomeController extends Controller
                         'id' => $key->id
                     ],
                     [
+                        'id' => $key->id,
                         'name' => $key->name,
                         'day' => $key->day,
                         'start_at' => $key->start_at,
@@ -65,6 +67,7 @@ class HomeController extends Controller
                         'name' => $key->name
                     ],
                     [
+                        'id' => $key->id,
                         'name' => $key->name,
                         'unique_key' => $key->unique_key,
                     ]
