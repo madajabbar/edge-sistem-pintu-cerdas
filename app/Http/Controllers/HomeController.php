@@ -136,7 +136,13 @@ class HomeController extends Controller
                             'status' => 'pending'
                         ]
                     );
-                    return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
+                    return ResponseFormatter::success([
+                       'data' => $data,
+                       'errors' => [
+                        'message' => $e->getMessage(),
+                        'details' => $e->getTrace(),
+                       ]
+                    ], 'Upload Success but cloud server has trouble');
                 }
             }
             if($user == null){
