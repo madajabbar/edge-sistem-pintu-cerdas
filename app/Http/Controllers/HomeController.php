@@ -89,6 +89,51 @@ class HomeController extends Controller
             $expld = explode('-', $str);
             $user = User::where('name', $expld[0])->first();
             if($user ? $user->name == 'admin' : false){
+                $access = Access::where('room_id', $ruangan_id)->first();
+                $url = 'http://pintucerdas.my.id/api/get';
+                $data = [
+                    'access_id' => $access->id,
+                    'user_id' => $user->id,
+                ];
+                // dd($data);
+                $statusCode = 0;
+                $client = new Client();
+                try {
+                    $response = $client->post($url, [
+                        'form_params' => $data
+                    ]);
+                    $data = Log::Create(
+                        [
+                            'access_id' => $access->id,
+                            'user_id' => $user->id,
+                            'status' => 'success'
+                        ]
+                    );
+                    $statusCode = $response->getStatusCode();
+                    $check_pending = Log::where('status', 'pending')->get();
+                    foreach ($check_pending as $key => $value) {
+                        $data = [
+                            'access_id' => $value->access_id,
+                            'user_id' => $value->user_id,
+                        ];
+                        $client->post($url, [
+                            'form_params' => $data
+                        ]);
+                        Log::where('id', $value->id)->update([
+                            'status' => 'success'
+                        ]);
+                    }
+                    return ResponseFormatter::success($data, 'Upload Successfully');
+                } catch (Exception $e) {
+                    $data = Log::Create(
+                        [
+                            'access_id' => $access->id,
+                            'user_id' => $user->id,
+                            'status' => 'pending'
+                        ]
+                    );
+                    return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
+                }
                 return ResponseFormatter::success(null, 'Admin open the door');
             }
             if($user == null){
@@ -97,6 +142,7 @@ class HomeController extends Controller
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
             $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
             // dd($arr);
+
             if (is_null($arr)) {
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
