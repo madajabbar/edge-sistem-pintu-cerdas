@@ -22,8 +22,8 @@ class HomeController extends Controller
             Artisan::call('migrate:fresh');
             $jsonurl = "http://pintucerdas.my.id/api/room";
             $json = file_get_contents($jsonurl);
-            $data = json_decode($json);
-            foreach ($data as $key) {
+            $room = json_decode($json);
+            foreach ($room as $key) {
                 Room::updateOrCreate(
                     [
                         'id' => $key->id
@@ -38,8 +38,8 @@ class HomeController extends Controller
 
             $jsonurl = "http://pintucerdas.my.id/api/access";
             $json = file_get_contents($jsonurl);
-            $data = json_decode($json);
-            foreach ($data as $key) {
+            $access = json_decode($json);
+            foreach ($access as $key) {
                 Access::updateOrCreate(
                     [
                         'id' => $key->id
@@ -58,8 +58,8 @@ class HomeController extends Controller
 
             $jsonurl = "http://pintucerdas.my.id/api/getuser";
             $json = file_get_contents($jsonurl);
-            $data = json_decode($json);
-            foreach ($data as $key) {
+            $user = json_decode($json);
+            foreach ($user as $key) {
                 User::updateOrCreate(
                     [
                         'name' => $key->name
@@ -70,7 +70,11 @@ class HomeController extends Controller
                     ]
                 );
             }
-            return ResponseFormatter::success(null, 'data created successfully');
+            return ResponseFormatter::success([
+                'room' => $room,
+                'access' => $access,
+                'user' => $user,
+            ], 'data created successfully');
         } catch (Exception $e) {
             return ResponseFormatter::error(
                 [
@@ -134,7 +138,6 @@ class HomeController extends Controller
                     );
                     return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
                 }
-                return ResponseFormatter::success(null, 'Admin open the door');
             }
             if($user == null){
                 return ResponseFormatter::error(null,'User Not Found');
