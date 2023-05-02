@@ -163,8 +163,16 @@ class HomeController extends Controller
                     $response = $client->post($url, [
                         'form_params' => $data
                     ]);
+                    $check_log = Log::orderBy('id','DESC')->first();
+                    if($check_log == null){
+                        $id = 1;
+                    }
+                    else{
+                        $id = $check_log->id++;
+                    }
                     $data = Log::Create(
                         [
+                            'id' => $id,
                             'access_id' => $arr->id,
                             'user_id' => $user->id,
                             'status' => 'success'
