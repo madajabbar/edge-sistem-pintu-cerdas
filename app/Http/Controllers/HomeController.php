@@ -24,10 +24,7 @@ class HomeController extends Controller
             $json = file_get_contents($jsonurl);
             $room = json_decode($json);
             foreach ($room as $key) {
-                Room::updateOrCreate(
-                    [
-                        'id' => $key->id
-                    ],
+                Room::create(
                     [
                         'id' => $key->id,
                         'name' => $key->name,
@@ -41,10 +38,7 @@ class HomeController extends Controller
             $json = file_get_contents($jsonurl);
             $access = json_decode($json);
             foreach ($access as $key) {
-                Access::updateOrCreate(
-                    [
-                        'id' => $key->id
-                    ],
+                Access::create(
                     [
                         'id' => $key->id,
                         'name' => $key->name,
@@ -62,10 +56,7 @@ class HomeController extends Controller
             $json = file_get_contents($jsonurl);
             $user = json_decode($json);
             foreach ($user as $key) {
-                User::updateOrCreate(
-                    [
-                        'name' => $key->name
-                    ],
+                User::create(
                     [
                         'id' => $key->id,
                         'name' => $key->name,
@@ -82,6 +73,7 @@ class HomeController extends Controller
             return ResponseFormatter::error(
                 [
                     'error' => $e->getMessage(),
+                    'details' => $e->getTrace(),
                 ],
                 'some error occurred'
             );
@@ -153,7 +145,7 @@ class HomeController extends Controller
             }
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
             $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
-            // dd($arr);
+            dd($arr);
 
             if (is_null($arr)) {
                 return ResponseFormatter::error(null, 'Invalid QR');

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->time('end_at');
             $table->string('unique_key');
             $table->string('slug');
-            $table->unsignedBigInteger('room_id');
+            $table->integer('room_id');
             $table->timestamps();
 
             $table->foreign('room_id')->references('id')->on('rooms')->onDelete('CASCADE')->onUpdate('CASCADE');
