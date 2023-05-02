@@ -168,7 +168,7 @@ class HomeController extends Controller
                         $id = 1;
                     }
                     else{
-                        $id = $check_log->id++;
+                        $id = $check_log->id + 1;
                     }
                     $data = Log::Create(
                         [
