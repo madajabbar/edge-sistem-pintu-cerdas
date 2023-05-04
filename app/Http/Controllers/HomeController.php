@@ -160,10 +160,10 @@ class HomeController extends Controller
                 return ResponseFormatter::error(null,'User Not Found');
             }
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now())->where('end_at', '>', Carbon::now())->first();
-            $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
+            $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->get();
             // dd($arr);
 
-            if (is_null($arr)) {
+            if ($arr->isEmpty()) {
                 return ResponseFormatter::error(null, 'Invalid QR');
             }
             if ($arr->day == Carbon::now()->format('l') && (Carbon::now()->format('H:i:s') >= $arr->start_at && Carbon::now()->format('H:i:s') <= $arr->end_at)) {
