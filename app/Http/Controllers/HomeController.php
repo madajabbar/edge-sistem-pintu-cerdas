@@ -177,7 +177,7 @@ class HomeController extends Controller
             // dd($arr);
             $arr = [];
             foreach ($user->access as $key) {
-                if ($key->start_at <= Carbon::now()->format('H:i:s') && $key->end_at >= Carbon::now()->format('H:i:s') && $key->day == Carbon::now()->format('l') && $key->room_id == 1) {
+                if ($key->start_at <= Carbon::now()->format('H:i:s') && $key->end_at >= Carbon::now()->format('H:i:s') && $key->day == Carbon::now()->format('l') && $key->room_id == $ruangan_id) {
                     array_push($arr, $key);
                 }
             }
