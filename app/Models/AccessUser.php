@@ -5,15 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Access extends Model
+class AccessUser extends Model
 {
     use HasFactory;
+
     protected $guarded = [];
 
-    public function room(){
-        return $this->belongsTo(Room::class);
-    }
     public function user(){
-        return $this->belongsToMany(User::class, 'access_users');
+        return $this->belongsTo(User::class);
+    }
+    public function access(){
+        return $this->belongsTo(Access::class);
     }
 }

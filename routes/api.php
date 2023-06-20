@@ -21,3 +21,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('getaccess', [HomeController::class,'index']);
 Route::post('store', [HomeController::class,'store']);
+Route::get('test',[HomeController::class,'test']);

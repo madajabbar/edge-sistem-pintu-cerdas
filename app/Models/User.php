@@ -9,4 +9,9 @@ class User extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+
+    public function access(){
+        return $this->belongsToMany(Access::class, 'access_users');
+    }
 }

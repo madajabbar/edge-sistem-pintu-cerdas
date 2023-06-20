@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseFormatter;
 use App\Models\Access;
+use App\Models\AccessUser;
 use App\Models\Log;
 use App\Models\Room;
 use App\Models\User;
@@ -64,6 +65,20 @@ class HomeController extends Controller
                     ]
                 );
             }
+
+            $jsonurl = "http://pintucerdas.my.id/api/accessuser";
+            $json = file_get_contents($jsonurl);
+            $accessuser = json_decode($json);
+            foreach ($accessuser as $key) {
+                // dd($key->id);
+                AccessUser::create(
+                    [
+                        'id' => $key->id,
+                        'user_id' => $key->user_id,
+                        'access_id' => $key->access_id,
+                    ]
+                );
+            }
             return ResponseFormatter::success([
                 'room' => $room,
                 'access' => $access,
@@ -87,7 +102,7 @@ class HomeController extends Controller
             $str = $request->link;
             $expld = explode('-', $str);
             $user = User::where('name', $expld[0])->first();
-            if($user ? $user->name == 'admin' : false){
+            if ($user ? $user->name == 'admin' : false) {
                 $access = Access::where('room_id', $ruangan_id)->first();
                 $url = 'http://pintucerdas.my.id/api/get';
                 $data = [
@@ -101,11 +116,10 @@ class HomeController extends Controller
                     $response = $client->post($url, [
                         'form_params' => $data
                     ]);
-                    $check_log = Log::orderBy('id','DESC')->first();
-                    if($check_log == null){
+                    $check_log = Log::orderBy('id', 'DESC')->first();
+                    if ($check_log == null) {
                         $id = 1;
-                    }
-                    else{
+                    } else {
                         $id = $check_log->id + 1;
                     }
                     $data = Log::Create(
@@ -132,11 +146,10 @@ class HomeController extends Controller
                     }
                     return ResponseFormatter::success($data, 'Upload Successfully');
                 } catch (Exception $e) {
-                    $check_log = Log::orderBy('id','DESC')->first();
-                    if($check_log == null){
+                    $check_log = Log::orderBy('id', 'DESC')->first();
+                    if ($check_log == null) {
                         $id = 1;
-                    }
-                    else{
+                    } else {
                         $id = $check_log->id + 1;
                     }
                     $data = Log::Create(
@@ -148,93 +161,89 @@ class HomeController extends Controller
                         ]
                     );
                     return ResponseFormatter::success([
-                       'data' => $data,
-                       'errors' => [
-                        'message' => $e->getMessage(),
-                        'details' => $e->getTrace(),
-                       ]
+                        'data' => $data,
+                        'errors' => [
+                            'message' => $e->getMessage(),
+                            'details' => $e->getTrace(),
+                        ]
                     ], 'Upload Success but cloud server has trouble');
                 }
             }
-            if($user == null){
-                return ResponseFormatter::error(null,'User Not Found');
+            if ($user == null) {
+                return ResponseFormatter::error(null, 'User Not Found');
             }
-            $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now()->format('H:i:s'))->where('end_at', '>', Carbon::now()->format('H:i:s'))->first();
+            // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->where('day', Carbon::now()->format('l'))->where('start_at', '<', Carbon::now()->format('H:i:s'))->where('end_at', '>', Carbon::now()->format('H:i:s'))->first();
             // $arr = Access::whereIn('unique_key', $expld)->where('room_id', $ruangan_id)->first();
             // dd($arr);
-
-            if (is_null($arr)) {
-                return ResponseFormatter::error(null, 'Invalid QR');
+            $arr = [];
+            foreach ($user->access as $key) {
+                if ($key->start_at <= Carbon::now()->format('H:i:s') && $key->end_at >= Carbon::now()->format('H:i:s') && $key->day == Carbon::now()->format('l') && $key->room_id == 1) {
+                    array_push($arr, $key);
+                }
             }
-            if ($arr->day == Carbon::now()->format('l') && (Carbon::now()->format('H:i:s') >= $arr->start_at && Carbon::now()->format('H:i:s') <= $arr->end_at)) {
+            if ($arr == null) {
+                return ResponseFormatter::error(
+                    'Invalid QR, You have no no access',
+                    'You have no access in this room yet'
+                );
+            }
+            try {
                 $url = 'http://pintucerdas.my.id/api/get';
                 $data = [
-                    'access_id' => $arr->id,
+                    'access_id' => $arr[0]['id'],
                     'user_id' => $user->id,
                 ];
                 // dd($data);
                 $statusCode = 0;
                 $client = new Client();
-                try {
-                    $response = $client->post($url, [
+                $response = $client->post($url, [
+                    'form_params' => $data
+                ]);
+                $check_log = Log::orderBy('id', 'DESC')->first();
+                if ($check_log == null) {
+                    $id = 1;
+                } else {
+                    $id = $check_log->id + 1;
+                }
+                $data = Log::Create(
+                    [
+                        'id' => $id,
+                        'access_id' => $arr[0]['id'],
+                        'user_id' => $user->id,
+                        'status' => 'success'
+                    ]
+                );
+                $statusCode = $response->getStatusCode();
+                $check_pending = Log::where('status', 'pending')->get();
+                foreach ($check_pending as $key => $value) {
+                    $data = [
+                        'access_id' => $value->access_id,
+                        'user_id' => $value->user_id,
+                    ];
+                    $client->post($url, [
                         'form_params' => $data
                     ]);
-                    $check_log = Log::orderBy('id','DESC')->first();
-                    if($check_log == null){
-                        $id = 1;
-                    }
-                    else{
-                        $id = $check_log->id + 1;
-                    }
-                    $data = Log::Create(
-                        [
-                            'id' => $id,
-                            'access_id' => $arr->id,
-                            'user_id' => $user->id,
-                            'status' => 'success'
-                        ]
-                    );
-                    $statusCode = $response->getStatusCode();
-                    $check_pending = Log::where('status', 'pending')->get();
-                    foreach ($check_pending as $key => $value) {
-                        $data = [
-                            'access_id' => $value->access_id,
-                            'user_id' => $value->user_id,
-                        ];
-                        $client->post($url, [
-                            'form_params' => $data
-                        ]);
-                        Log::where('id', $value->id)->update([
-                            'status' => 'success'
-                        ]);
-                    }
-                    return ResponseFormatter::success($data, 'Upload Successfully');
-                } catch (Exception $e) {
-                    $check_log = Log::orderBy('id','DESC')->first();
-                    if($check_log == null){
-                        $id = 1;
-                    }
-                    else{
-                        $id = $check_log->id + 1;
-                    }
-                    $data = Log::Create(
-                        [
-                            'id' => $id,
-                            'access_id' => $arr->id,
-                            'user_id' => $user->id,
-                            'status' => 'pending'
-                        ]
-                    );
-                    return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
+                    Log::where('id', $value->id)->update([
+                        'status' => 'success'
+                    ]);
                 }
-                // $responseContent = $response->getBody()->getContents();
-                // dd();
-                // Do whatever you need to do with the response content
-            }
-            else{
-                return ResponseFormatter::error(
-                    'Invalid QR', 'You has no access in this room yet'
+                return ResponseFormatter::success($data, 'Upload Successfully');
+            } catch (Exception $e) {
+                $check_log = Log::orderBy('id', 'DESC')->first();
+                if ($check_log == null) {
+                    $id = 1;
+                } else {
+                    $id = $check_log->id + 1;
+                }
+                $data = Log::Create(
+                    [
+                        'id' => $id,
+                        'access_id' => $arr[0]['id'],
+                        'user_id' => $user->id,
+                        'status' => 'pending'
+                    ]
                 );
+                return ResponseFormatter::success($data, 'Upload Success but cloud server has trouble');
             }
         } catch (Exception $e) {
             return ResponseFormatter::error(
@@ -245,5 +254,35 @@ class HomeController extends Controller
                 'some error occurred'
             );
         }
+    }
+
+    public function test(Request $request)
+    {
+        $access = Access::where('room_id', 1)
+            ->where('day', Carbon::now()->format('l'))
+            ->where('start_at', '<=', Carbon::now()->format('H:i:s'))
+            ->where('end_at', '>=', Carbon::now()->format('H:i:s'))
+            ->get();
+        $user = User::where('unique_key', '$2y$10$Fui31RbeltVSWJuTr0HO.e6Fu8Z9ycmYKKKzszTFIZLmuDQkI8ESm')->first();
+        $test = [];
+        foreach ($user->access as $key) {
+            if ($key->start_at <= Carbon::now()->format('H:i:s') && $key->end_at >= Carbon::now()->format('H:i:s') && $key->day == Carbon::now()->format('l') && $key->room_id == 1) {
+                array_push($test, $key);
+            }
+        }
+        if ($test == null) {
+            return ResponseFormatter::error(
+                [
+                    'error' => 'You have no access in this room yet',
+                    'trace' => $access->first()->trace,
+                ],
+                'some error occurred'
+            );
+        }
+        return ResponseFormatter::success(
+            [
+                'test' => $test
+            ]
+        );
     }
 }
