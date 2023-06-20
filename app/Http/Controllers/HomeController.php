@@ -101,7 +101,7 @@ class HomeController extends Controller
             $ruangan_id = $request->room_id;
             $str = $request->link;
             $expld = explode('-', $str);
-            $user = User::where('name', $expld[0])->first();
+            $user = User::where('unique_key', $expld[0])->first();
             if ($user ? $user->name == 'admin' : false) {
                 $access = Access::where('room_id', $ruangan_id)->first();
                 $url = 'http://pintucerdas.my.id/api/get';
@@ -263,8 +263,16 @@ class HomeController extends Controller
             ->where('start_at', '<=', Carbon::now()->format('H:i:s'))
             ->where('end_at', '>=', Carbon::now()->format('H:i:s'))
             ->get();
-        $user = User::where('unique_key', '$2y$10$Fui31RbeltVSWJuTr0HO.e6Fu8Z9ycmYKKKzszTFIZLmuDQkI8ESm')->first();
+        $user = User::where('unique_key', '$2y$10$LjW4eGc.wTult/zKPiqOkuLJlZO2KT3fxcP0iZfSxkX8r6H60TnBO')->first();
         $test = [];
+        if($user == null){
+            return ResponseFormatter::error(
+                [
+                    'error' => 'user not found',
+                ],
+                'some error occurred'
+            );
+        }
         foreach ($user->access as $key) {
             if ($key->start_at <= Carbon::now()->format('H:i:s') && $key->end_at >= Carbon::now()->format('H:i:s') && $key->day == Carbon::now()->format('l') && $key->room_id == 1) {
                 array_push($test, $key);
